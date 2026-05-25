@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { parseArgs } from "node:util";
 import { invokeAnkiConnect } from "./Invoke-AnkiConnect.mjs";
 
 const repoRoot = path.resolve(
@@ -23,33 +24,38 @@ async function main() {
 	await syncTemplate(template, options);
 }
 
-function readCliOptions(args) {
-	const options = {
+export function readCliOptions(args) {
+	const defaults = {
 		baseUrl: "http://127.0.0.1:8765",
 		createIfMissing: false,
 		template: "./templates/basic-editorial-v2",
 	};
+	const values = parseCliArgs(args);
 
-	for (let index = 0; index < args.length; index += 1) {
-		const arg = args[index];
-		if (arg === "--create-if-missing") options.createIfMissing = true;
-		if (arg === "--template") options.template = readRequiredValue(args, index);
-		if (arg === "--base-url") options.baseUrl = readRequiredValue(args, index);
-		if (arg === "--template" || arg === "--base-url") index += 1;
-	}
-
-	return options;
+	return {
+		baseUrl: values["base-url"] ?? defaults.baseUrl,
+		createIfMissing: values["create-if-missing"] ?? defaults.createIfMissing,
+		template: values.template ?? defaults.template,
+	};
 }
 
-function readRequiredValue(args, index) {
-	const value = args[index + 1];
-	if (!value) {
+function parseCliArgs(args) {
+	try {
+		return parseArgs({
+			allowPositionals: false,
+			args,
+			options: {
+				"base-url": { type: "string" },
+				"create-if-missing": { type: "boolean" },
+				template: { type: "string" },
+			},
+			strict: true,
+		}).values;
+	} catch (error) {
 		throw new Error(
-			`Missing value for '${args[index]}'. Expected a value after the option.`,
+			`Invalid sync arguments '${args.join(" ")}'. Expected --template <path>, --base-url <url>, and optional --create-if-missing. Cause: ${error.message}`,
 		);
 	}
-
-	return value;
 }
 
 async function readTemplateFiles(templatePath) {
@@ -184,4 +190,11 @@ async function updateModelTemplate(template, baseUrl) {
 	});
 }
 
-await main();
+function isExecutedScript(moduleUrl, scriptPath) {
+	if (!scriptPath) return false;
+	return moduleUrl === pathToFileURL(scriptPath).href;
+}
+
+if (isExecutedScript(import.meta.url, process.argv[1])) {
+	await main();
+}
