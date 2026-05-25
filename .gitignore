@@ -1,0 +1,38 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+# Coverage and build output
+coverage/
+dist/
+build/
+lib/
+.nyc_output/
+# Dependencies
+node_modules/
+# Caches
+.cache/
+.parcel-cache/
+.turbo/
+.vite/
+.vitest/
+# Test output
+playwright-report/
+test-results/
+# Environment files
+.env
+.env.*
+!.env.example
+# Temporary files
+tmp/
+temp/
+*.tmp
+*tmp

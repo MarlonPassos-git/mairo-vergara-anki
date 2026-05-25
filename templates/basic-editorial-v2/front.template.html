@@ -1,0 +1,143 @@
+<script>
+  qFade = 0;
+  if (typeof anki !== "undefined") anki.qFade = qFade;
+</script>
+
+<div class="mp-scene">
+  <div class="mp-card mp-card-front">
+    <div class="mp-focus">
+      {{#Transcricao JSON}}
+      <div class="mp-sentence mp-timed-sentence">
+        <textarea class="mp-transcript-json" hidden>{{Transcricao JSON}}</textarea>
+        <span class="mp-timed-fallback">{{Frase em ingles}}</span>
+      </div>
+      {{/Transcricao JSON}}
+
+      {{^Transcricao JSON}}
+      <div class="mp-sentence">{{Frase em ingles}}</div>
+      {{/Transcricao JSON}}
+    </div>
+
+    <div class="mp-reveal mp-reveal-empty" aria-hidden="true"></div>
+
+    {{#Audio em ingles}}
+    <div class="mp-audio" title="Ouvir pronuncia">{{Audio em ingles}}</div>
+    {{/Audio em ingles}}
+  </div>
+</div>
+
+<script>
+(() => {
+  const state = { timer: 0 };
+  setupTimedSentence();
+
+  function setupTimedSentence() {
+    const containers = Array.from(document.querySelectorAll(".mp-timed-sentence"));
+    if (containers.length === 0) return;
+
+    const timedWords = readTimedWords(containers[0]);
+    if (timedWords.length === 0) return;
+
+    containers.forEach((container) => renderTimedWords(container, timedWords));
+    bindAudioSync(timedWords);
+  }
+
+  function readTimedWords(container) {
+    const source = container.querySelector(".mp-transcript-json");
+    if (!source) return [];
+
+    try {
+      const parsed = JSON.parse(readSourceText(source));
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map(readTimedWord).filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  function readTimedWord(value) {
+    const start = Number(value.s ?? value.start);
+    const end = Number(value.e ?? value.end);
+    const word = String(value.w ?? value.word ?? "").trim();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || word === "") return null;
+    return { end, start, word };
+  }
+
+  function readSourceText(source) {
+    const text = source.value || source.textContent || "";
+    return text.replaceAll("&quot;", '"').trim();
+  }
+
+  function renderTimedWords(container, words) {
+    const targets = readHighlightedWords(container);
+    container.textContent = "";
+    words.forEach((word, index) => {
+      if (index > 0) container.append(" ");
+      const span = document.createElement("span");
+      span.className = "mp-timed-word";
+      if (targets.has(normalizeWord(word.word))) span.classList.add("is-target");
+      span.dataset.start = String(word.start);
+      span.dataset.end = String(word.end);
+      span.textContent = word.word;
+      container.append(span);
+    });
+  }
+
+  function readHighlightedWords(container) {
+    const fallback = container.querySelector(".mp-timed-fallback");
+    const marked = fallback ? fallback.querySelectorAll("b, strong") : [];
+    return new Set(Array.from(marked).flatMap(readHighlightedWordTokens));
+  }
+
+  function readHighlightedWordTokens(node) {
+    return String(node.textContent || "")
+      .split(/[^\p{L}\p{N}]+/gu)
+      .map(normalizeWord)
+      .filter(Boolean);
+  }
+
+  function normalizeWord(value) {
+    return String(value || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+  }
+
+  function bindAudioSync(words) {
+    const audio = document.querySelector("audio");
+    if (audio) {
+      audio.addEventListener("timeupdate", () => setActiveWord(audio.currentTime));
+      audio.addEventListener("ended", () => setActiveWord(-1));
+      return;
+    }
+
+    window.setTimeout(() => runFallbackTimer(words), 250);
+    document.addEventListener("click", (event) => restartOnReplayClick(event, words), true);
+  }
+
+  function restartOnReplayClick(event, words) {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest(".mp-audio, .replay-button, .replaybutton, .soundLink")) return;
+
+    runFallbackTimer(words);
+  }
+
+  function runFallbackTimer(words) {
+    clearInterval(state.timer);
+    setActiveWord(-1);
+    const startedAt = Date.now();
+    const duration = Math.max(...words.map((word) => word.end)) + 0.25;
+    state.timer = setInterval(() => {
+      const currentSecond = (Date.now() - startedAt) / 1000;
+      setActiveWord(currentSecond);
+      if (currentSecond > duration) clearInterval(state.timer);
+    }, 60);
+  }
+
+  function setActiveWord(currentSecond) {
+    document.querySelectorAll(".mp-timed-word").forEach((word) => {
+      const start = Number(word.dataset.start);
+      const end = Number(word.dataset.end);
+      word.classList.toggle("is-active", currentSecond >= start && currentSecond <= end);
+    });
+  }
+})();
+</script>

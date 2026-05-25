@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Whisper para Transcricao JSON</title>
+    <style>
+      :root {
+        --bg: #fffaf0;
+        --panel: #ffffff;
+        --text: #231f20;
+        --muted: #6c625c;
+        --border: #231f20;
+        --action: #fcba28;
+        --shadow: 2px 2px 0 #231f20;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+
+      main {
+        width: min(820px, 100%);
+        margin: 0 auto;
+        display: grid;
+        gap: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.15;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input,
+      button,
+      textarea {
+        width: 100%;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font: inherit;
+      }
+
+      input,
+      textarea {
+        padding: 10px 12px;
+        background: var(--panel);
+      }
+
+      button {
+        padding: 11px 14px;
+        background: var(--action);
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      textarea {
+        min-height: 220px;
+        resize: vertical;
+        font-family: Consolas, "JetBrains Mono", monospace;
+        font-size: 13px;
+      }
+
+      .panel {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 130px;
+        gap: 12px;
+      }
+
+      .status {
+        min-height: 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 640px) {
+        body {
+          padding: 14px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Whisper para Transcricao JSON</h1>
+
+      <section class="panel">
+        <div class="grid">
+          <label>
+            Endpoint
+            <input id="endpoint" value="http://127.0.0.1:8090/transcribe" />
+          </label>
+
+          <label>
+            Idioma
+            <input id="language" value="en" />
+          </label>
+        </div>
+
+        <label>
+          Audio MP3
+          <input id="audio-file" accept="audio/*" type="file" />
+        </label>
+
+        <button id="transcribe-button" type="button">Gerar Transcricao JSON</button>
+        <div id="status" class="status"></div>
+      </section>
+
+      <section class="panel">
+        <label>
+          Campo Transcricao JSON
+          <textarea id="output" spellcheck="false"></textarea>
+        </label>
+        <button id="copy-button" type="button">Copiar JSON</button>
+      </section>
+    </main>
+
+    <script>
+      const endpointInput = document.querySelector("#endpoint");
+      const languageInput = document.querySelector("#language");
+      const audioInput = document.querySelector("#audio-file");
+      const transcribeButton = document.querySelector("#transcribe-button");
+      const copyButton = document.querySelector("#copy-button");
+      const output = document.querySelector("#output");
+      const status = document.querySelector("#status");
+
+      transcribeButton.addEventListener("click", transcribeSelectedAudio);
+      copyButton.addEventListener("click", copyOutput);
+
+      async function transcribeSelectedAudio() {
+        const file = audioInput.files[0];
+        if (!file) return setStatus("Selecione um audio primeiro.");
+
+        transcribeButton.disabled = true;
+        setStatus("Enviando audio para o Whisper...");
+
+        try {
+          const response = await requestWhisperTranscript(file);
+          output.value = JSON.stringify(toTimedWords(response));
+          setStatus("JSON pronto para colar no campo Transcricao JSON.");
+        } catch (error) {
+          setStatus(error.message);
+        } finally {
+          transcribeButton.disabled = false;
+        }
+      }
+
+      async function requestWhisperTranscript(file) {
+        const form = new FormData();
+        form.append("file", file, file.name || "line.mp3");
+        form.append("language", languageInput.value || "en");
+        form.append("wordTimestamps", "true");
+        form.append("responseFormat", "verbose_json");
+
+        const response = await fetch(endpointInput.value, { body: form, method: "POST" });
+        if (!response.ok) throw new Error(`Whisper retornou ${response.status}; esperado 2xx.`);
+        return response.json();
+      }
+
+      function toTimedWords(response) {
+        const words = Array.isArray(response.words) ? response.words : readSegmentWords(response);
+        return words.map(toTimedWord).filter(Boolean);
+      }
+
+      function readSegmentWords(response) {
+        if (!Array.isArray(response.segments)) return [];
+        return response.segments.flatMap((segment) => segment.words || []);
+      }
+
+      function toTimedWord(word) {
+        const start = Number(word.start);
+        const end = Number(word.end);
+        const text = String(word.word || "").trim();
+        if (!Number.isFinite(start) || !Number.isFinite(end) || text === "") return null;
+        return { s: roundSecond(start), e: roundSecond(end), w: text };
+      }
+
+      function roundSecond(value) {
+        return Math.round(value * 100) / 100;
+      }
+
+      async function copyOutput() {
+        await navigator.clipboard.writeText(output.value);
+        setStatus("JSON copiado.");
+      }
+
+      function setStatus(message) {
+        status.textContent = message;
+      }
+    </script>
+  </body>
+</html>

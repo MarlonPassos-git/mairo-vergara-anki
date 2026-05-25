@@ -1,0 +1,18 @@
+<script>
+  qFade = 0;
+  if (typeof anki !== "undefined") anki.qFade = qFade;
+</script>
+
+<div class="mp-scene">
+  <div class="mp-card mp-card-front">
+    <div class="mp-focus">
+      <div class="mp-sentence">{{Frente}}</div>
+    </div>
+
+    <div class="mp-reveal mp-reveal-empty" aria-hidden="true"></div>
+
+    {{#Audio}}
+    <div class="mp-audio" title="Ouvir pronuncia">{{Audio}}</div>
+    {{/Audio}}
+  </div>
+</div>

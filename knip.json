@@ -1,0 +1,16 @@
+{
+	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"ignoreDependencies": [
+		"@playwright/test",
+		"@sonar/scan",
+		"@types/node",
+		"@vitest/coverage-v8",
+		"lefthook"
+	],
+	"project": [
+		"**/*.{ts,tsx,js,jsx,mjs,cjs}",
+		"!coverage/**",
+		"!dist/**",
+		"!node_modules/**"
+	]
+}

@@ -1,0 +1,10 @@
+{
+	"modelName": "Mairo Clean - Basic Editorial v1",
+	"cardTemplateName": "Card 1",
+	"fields": ["Frente", "Verso", "Audio"],
+	"files": {
+		"front": "front.template.html",
+		"back": "back.template.html",
+		"css": "styling.css"
+	}
+}

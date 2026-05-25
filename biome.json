@@ -1,0 +1,26 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+	"extends": ["@m-p-toolkit/biome-config/node"],
+	"files": {
+		"includes": [
+			"**",
+			"!!coverage",
+			"!!dist",
+			"!!node_modules",
+			"!!playwright-report",
+			"!!templates/**/*.html",
+			"!!test-results"
+		]
+	},
+	"linter": {
+		"rules": {
+			"complexity": {
+				"noImportantStyles": "off"
+			},
+			"style": {
+				"noDescendingSpecificity": "off",
+				"noDefaultExport": "off"
+			}
+		}
+	}
+}

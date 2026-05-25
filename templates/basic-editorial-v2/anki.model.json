@@ -1,0 +1,16 @@
+{
+	"modelName": "Mairo Clean - Basic Editorial v2",
+	"cardTemplateName": "Card 1",
+	"fields": [
+		"Frase em ingles",
+		"Traducao do trecho",
+		"Traducao da frase",
+		"Audio em ingles",
+		"Transcricao JSON"
+	],
+	"files": {
+		"front": "front.template.html",
+		"back": "back.template.html",
+		"css": "styling.css"
+	}
+}
