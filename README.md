@@ -3,7 +3,7 @@
 
   <h1>mairo-vergara-anki</h1>
 
-  <p>Catalogo de templates Anki para o Curso de Ingles Mairo Vergara.</p>
+  <p>Anki template catalog for the Mairo Vergara English course.</p>
 
   <p>
     <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-111111" />
@@ -14,11 +14,11 @@
 
 ## Features
 
-- Uma colecao de templates Anki para usar no curso. Veja a [tabela de templates](docs/templates.md) com frente, verso e campos aceitos.
+- A collection of Anki templates for the course. See the [template table](docs/templates.md) for front, back, and accepted fields.
 
 ## Change Log
 
-Veja [CHANGELOG.md](CHANGELOG.md) para detalhes sobre as mudancas em cada versao.
+See [CHANGELOG.md](CHANGELOG.md) for details about the changes in each version.
 
 ## Contributing
 
