@@ -274,8 +274,8 @@
 
 .mp-translation-toggle {
 	position: absolute;
-	top: -214px;
-	right: -14px;
+	right: 20px;
+	bottom: 63px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -288,13 +288,14 @@
 	color: var(--mp-text-subtle);
 	cursor: pointer;
 	opacity: 0.58;
-	pointer-events: auto;
+	z-index: 3;
 }
 
 .mp-translation-toggle:hover,
 .mp-translation-toggle:focus {
 	background: transparent;
 	color: var(--mp-action);
+	border-color: var(--mp-action);
 	opacity: 0.95;
 }
 
@@ -374,6 +375,6 @@ img {
 }
 
 .mobile .mp-translation-toggle {
-	top: -210px;
-	right: -6px;
+	right: 27px;
+	bottom: 61px;
 }

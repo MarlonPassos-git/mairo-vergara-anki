@@ -35,22 +35,25 @@
 
       {{#Traducao da frase}}
       <section class="mp-answer-block mp-answer-block-secondary">
-        <button
-          class="mp-translation-toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="mp-full-translation"
-          aria-label="Ver traducao completa"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        </button>
         <div id="mp-full-translation" class="mp-sentence-translation" hidden>{{Traducao da frase}}</div>
       </section>
       {{/Traducao da frase}}
     </div>
+
+    {{#Traducao da frase}}
+    <button
+      class="mp-translation-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="mp-full-translation"
+      aria-label="Ver traducao completa"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    </button>
+    {{/Traducao da frase}}
   </div>
 </div>
 
@@ -247,21 +250,40 @@
     const cardBox = card.getBoundingClientRect();
     const from = readBottomCenterOfGroup(targets, cardBox);
     const to = readLeftCenter(answer, cardBox);
-    const lead = { x: to.x - 24, y: to.y };
-    path.setAttribute("d", `M ${from.x} ${from.y} C ${from.x - 34} ${from.y + 42}, ${lead.x - 92} ${lead.y - 6}, ${lead.x} ${lead.y} L ${to.x} ${to.y}`);
+    const lead = { x: limitInsideCard(to.x - 24, cardBox), y: to.y };
+    const firstControl = { x: limitInsideCard(from.x - 34, cardBox), y: from.y + 42 };
+    const secondControl = { x: limitInsideCard(lead.x - 92, cardBox), y: lead.y - 6 };
+    path.setAttribute("d", `M ${from.x} ${from.y} C ${firstControl.x} ${firstControl.y}, ${secondControl.x} ${secondControl.y}, ${lead.x} ${lead.y} L ${to.x} ${to.y}`);
   }
 
   function readBottomCenterOfGroup(elements, cardBox) {
-    const boxes = Array.from(elements).map((element) => element.getBoundingClientRect());
-    const left = Math.min(...boxes.map((box) => box.left));
-    const right = Math.max(...boxes.map((box) => box.right));
-    const bottom = Math.max(...boxes.map((box) => box.bottom));
+    const boxes = readElementLineBoxes(elements);
+    const bottomBoxes = readBottomLineBoxes(boxes);
+    const left = Math.min(...bottomBoxes.map((box) => box.left));
+    const right = Math.max(...bottomBoxes.map((box) => box.right));
+    const bottom = Math.max(...bottomBoxes.map((box) => box.bottom));
     return { x: (left + right) / 2 - cardBox.left, y: bottom - cardBox.top + 5 };
+  }
+
+  function readElementLineBoxes(elements) {
+    return Array.from(elements).flatMap((element) => {
+      const lines = Array.from(element.getClientRects());
+      return lines.length > 0 ? lines : [element.getBoundingClientRect()];
+    });
+  }
+
+  function readBottomLineBoxes(boxes) {
+    const bottom = Math.max(...boxes.map((box) => box.bottom));
+    return boxes.filter((box) => box.bottom >= bottom - 3);
   }
 
   function readLeftCenter(element, cardBox) {
     const box = element.getBoundingClientRect();
     return { x: box.left - cardBox.left - 10, y: box.top + box.height / 2 - cardBox.top };
+  }
+
+  function limitInsideCard(value, cardBox) {
+    return Math.min(Math.max(value, 18), cardBox.width - 18);
   }
 })();
 </script>
