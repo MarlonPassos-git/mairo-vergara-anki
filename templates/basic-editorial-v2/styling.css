@@ -368,6 +368,7 @@ img {
 
 .mobile .mp-n1-answer {
 	font-size: clamp(14px, 4vw, 16px);
+	margin-left: 18px;
 }
 
 .mobile .mp-answer-block-secondary {
