@@ -35,8 +35,19 @@
 
       {{#Traducao da frase}}
       <section class="mp-answer-block mp-answer-block-secondary">
-        <div class="mp-answer-label">frase</div>
-        <div class="mp-sentence-translation">{{Traducao da frase}}</div>
+        <button
+          class="mp-translation-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="mp-full-translation"
+          aria-label="Ver traducao completa"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+        <div id="mp-full-translation" class="mp-sentence-translation" hidden>{{Traducao da frase}}</div>
       </section>
       {{/Traducao da frase}}
     </div>
@@ -46,7 +57,24 @@
 <script>
 (() => {
   const state = { timer: 0 };
+  bindFullTranslationToggle();
   setupTimedSentence();
+  setupStaticHighlightedWords();
+  drawAnswerConnector();
+  window.setTimeout(drawAnswerConnector, 80);
+
+  function bindFullTranslationToggle() {
+    const button = document.querySelector(".mp-translation-toggle");
+    const translation = document.querySelector("#mp-full-translation");
+    if (!button || !translation) return;
+
+    button.addEventListener("click", () => {
+      const shouldShow = button.getAttribute("aria-expanded") !== "true";
+      button.setAttribute("aria-expanded", String(shouldShow));
+      translation.hidden = !shouldShow;
+      button.setAttribute("aria-label", shouldShow ? "Ocultar traducao completa" : "Ver traducao completa");
+    });
+  }
 
   function setupTimedSentence() {
     const containers = Array.from(document.querySelectorAll(".mp-timed-sentence"));
@@ -56,7 +84,6 @@
     if (timedWords.length === 0) return;
 
     containers.forEach((container) => renderTimedWords(container, timedWords));
-    drawAnswerConnector();
     bindAudioSync(timedWords);
   }
 
@@ -93,12 +120,62 @@
       if (index > 0) container.append(" ");
       const span = document.createElement("span");
       span.className = "mp-timed-word";
-      if (targets.has(normalizeWord(word.word))) span.classList.add("is-target");
+      if (targets.has(normalizeWord(word.word))) {
+        span.classList.add("is-target");
+        span.dataset.target = "true";
+      }
       span.dataset.start = String(word.start);
       span.dataset.end = String(word.end);
       span.textContent = word.word;
       container.append(span);
     });
+    wrapTargetWordRuns(container);
+  }
+
+  function setupStaticHighlightedWords() {
+    document.querySelectorAll(".mp-card-back .mp-sentence b, .mp-card-back .mp-sentence strong").forEach((node) => {
+      node.classList.add("mp-static-target-run");
+    });
+  }
+
+  function wrapTargetWordRuns(container) {
+    let run = [];
+    Array.from(container.childNodes).forEach((node) => {
+      if (isTargetWordNode(node)) {
+        run.push(node);
+        return;
+      }
+
+      if (isInlineSpaceAfterRun(node, run)) {
+        run.push(node);
+        return;
+      }
+
+      replaceTargetRun(run);
+      run = [];
+    });
+    replaceTargetRun(run);
+  }
+
+  function isTargetWordNode(node) {
+    return node instanceof Element && node.matches(".mp-timed-word.is-target");
+  }
+
+  function isInlineSpaceAfterRun(node, run) {
+    if (run.length === 0 || node.nodeType !== Node.TEXT_NODE) return false;
+    return /^\s+$/.test(node.textContent || "");
+  }
+
+  function replaceTargetRun(run) {
+    while (run.length > 0 && run[run.length - 1].nodeType === Node.TEXT_NODE) {
+      run.pop();
+    }
+    if (run.length === 0) return;
+
+    const wrapper = document.createElement("span");
+    wrapper.className = "mp-target-run";
+    run[0].before(wrapper);
+    run.forEach((node) => wrapper.append(node));
   }
 
   function readHighlightedWords(container) {
@@ -160,25 +237,31 @@
 
   function drawAnswerConnector() {
     const card = document.querySelector(".mp-card-back");
-    const target = document.querySelector(".mp-sentence b, .mp-sentence strong, .mp-timed-word.is-target");
+    const targets = document.querySelectorAll(
+      ".mp-target-run, .mp-static-target-run, .mp-sentence b, .mp-sentence strong",
+    );
     const answer = document.querySelector(".mp-n1-answer");
     const path = document.querySelector(".mp-connector-path");
-    if (!card || !target || !answer || !path) return;
+    if (!card || targets.length === 0 || !answer || !path) return;
 
     const cardBox = card.getBoundingClientRect();
-    const from = readBottomCenter(target, cardBox);
-    const to = readTopCenter(answer, cardBox);
-    path.setAttribute("d", `M ${from.x} ${from.y} C ${from.x} ${from.y + 42}, ${to.x} ${to.y - 42}, ${to.x} ${to.y}`);
+    const from = readBottomCenterOfGroup(targets, cardBox);
+    const to = readLeftCenter(answer, cardBox);
+    const lead = { x: to.x - 24, y: to.y };
+    path.setAttribute("d", `M ${from.x} ${from.y} C ${from.x - 34} ${from.y + 42}, ${lead.x - 92} ${lead.y - 6}, ${lead.x} ${lead.y} L ${to.x} ${to.y}`);
   }
 
-  function readBottomCenter(element, cardBox) {
-    const box = element.getBoundingClientRect();
-    return { x: box.left + box.width / 2 - cardBox.left, y: box.bottom - cardBox.top + 4 };
+  function readBottomCenterOfGroup(elements, cardBox) {
+    const boxes = Array.from(elements).map((element) => element.getBoundingClientRect());
+    const left = Math.min(...boxes.map((box) => box.left));
+    const right = Math.max(...boxes.map((box) => box.right));
+    const bottom = Math.max(...boxes.map((box) => box.bottom));
+    return { x: (left + right) / 2 - cardBox.left, y: bottom - cardBox.top + 5 };
   }
 
-  function readTopCenter(element, cardBox) {
+  function readLeftCenter(element, cardBox) {
     const box = element.getBoundingClientRect();
-    return { x: box.left + box.width / 2 - cardBox.left, y: box.top - cardBox.top - 6 };
+    return { x: box.left - cardBox.left - 10, y: box.top + box.height / 2 - cardBox.top };
   }
 })();
 </script>
