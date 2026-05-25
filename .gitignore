@@ -10,27 +10,16 @@ pids
 *.pid
 *.seed
 *.pid.lock
-# Coverage and build output
-coverage/
-dist/
-build/
-lib/
-.nyc_output/
 # Dependencies
 node_modules/
 # Caches
 .cache/
-.parcel-cache/
-.turbo/
-.vite/
-.vitest/
-# Test output
-playwright-report/
-test-results/
 # Environment files
 .env
 .env.*
 !.env.example
+# Generated docs
+docs/index.html
 # Temporary files
 tmp/
 temp/

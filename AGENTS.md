@@ -52,59 +52,41 @@ Esta pasta centraliza todos os artefatos de template do Anki para o curso do Mai
 - `Transcricao JSON` deve aceitar lista compacta `[{ "s": 0, "e": 0.2, "w": "word" }]`
 - `Transcricao JSON` também pode aceitar o formato Whisper `start`/`end`/`word`
 - manter fallback quando o Anki não expuser elemento `<audio>` real
-- helpers locais devem ficar em `tools/` e ter teste em `__tests__/`
+- automacoes locais devem ficar em `scripts/`
 
 ## Fluxo recomendado
 
 1. criar nova pasta de versão em `templates/`
 2. copiar a base da versão mais próxima
 3. ajustar front, back e CSS
-4. documentar diferenças no `README.md`
+4. documentar diferenças em `docs/templates.md`
 5. adicionar um exemplo de uso se o template exigir HTML estruturado dentro de um campo
-6. atualizar ou criar teste em `__tests__/`
-7. sincronizar com Anki usando `scripts/Sync-AnkiTemplate.ps1`
+6. sincronizar com Anki usando `scripts/Sync-AnkiTemplate.mjs`
 
 <!-- setup-standard:start -->
 # AGENTS.md - mairo-vergara-anki
 
 ## Project Context
 
-Templates e ferramentas para cards Anki do Curso de Ingles Mairo Vergara.
+Catalogo de templates Anki para o Curso de Ingles Mairo Vergara.
 
 ## Runtime
 
-- Node: `>=24.0.0`
-- Module system: ESM
-- Package manager: pnpm `10.33.0`
+- pnpm `10.33.0`
+- Biome para lint/format dos arquivos suportados
+- Node para scripts de sincronizacao e geracao de docs
 
 ## Commands
 
 ```powershell
 pnpm install
-pnpm hooks:install
-pnpm dev
-pnpm build
 pnpm lint
-pnpm lint:ci
-pnpm type-check
-pnpm test
-pnpm test:ci
-pnpm test:templates
-pnpm test:unit
 pnpm sync
-# Optional when the project has integration or E2E coverage:
-# pnpm test:integration
-# pnpm test:e2e
 ```
 
 ## Testing Rules
 
-- Name unit tests `*.unit.spec.ts`.
-- Name integration tests `*.integration.spec.ts`.
-- Name E2E tests `*.e2e.spec.ts`.
-- Current template contract tests are PowerShell files under `__tests__/`.
-- Keep test data deterministic and avoid network or filesystem I/O in unit tests.
-- Put shared test helpers behind named factories or fake classes.
+- No automated test suite is currently configured.
 
 ## Coding Rules
 

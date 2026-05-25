@@ -1,42 +1,19 @@
 {
 	"name": "mairo-vergara-anki",
 	"version": "0.1.0",
-	"description": "Templates e ferramentas para cards Anki do Curso de Ingles Mairo Vergara.",
-	"private": false,
+	"description": "Catalogo de templates Anki para o Curso de Ingles Mairo Vergara.",
+	"private": true,
 	"license": "MIT",
 	"author": "Marlon Passos",
 	"type": "module",
 	"packageManager": "pnpm@10.33.0",
 	"scripts": {
-		"build": "pnpm test:templates",
-		"dev": "pwsh -NoProfile -File ./scripts/Watch-AnkiTemplate.ps1 -Template ./templates/basic-editorial-v2",
-		"hooks:install": "lefthook install",
-		"lint": "pnpm exec biome check --write --files-ignore-unknown=true .",
-		"lint:ci": "pnpm exec biome check --files-ignore-unknown=true .",
-		"prepare": "lefthook install",
-		"sonar:local": "vitest run --coverage --passWithNoTests && sonar -Dsonar.host.url=http://localhost:9000",
-		"sync": "pwsh -NoProfile -File ./scripts/Sync-AnkiTemplate.ps1 -Template ./templates/basic-editorial-v2 -CreateIfMissing",
-		"test": "pnpm test:templates && pnpm test:unit",
-		"test:ci": "pnpm test",
-		"test:e2e": "vitest run --passWithNoTests \"**/*.e2e.spec.ts\"",
-		"test:integration": "vitest run --passWithNoTests \"**/*.integration.spec.ts\"",
-		"test:templates": "pwsh -NoProfile -File ./__tests__/basic-editorial-v2.spec.ps1 && pwsh -NoProfile -File ./__tests__/whisper-transcript-json.spec.ps1",
-		"test:unit": "vitest run --passWithNoTests \"**/*.unit.spec.ts\"",
-		"type-check": "tsc --noEmit"
-	},
-	"engines": {
-		"node": ">=24.0.0",
-		"pnpm": ">=10.0.0"
+		"docs:templates": "node ./scripts/Generate-TemplateCatalog.mjs",
+		"lint": "pnpm exec biome check --files-ignore-unknown=true .",
+		"lint:fix": "pnpm exec biome check --write --files-ignore-unknown=true .",
+		"sync": "node ./scripts/Sync-AnkiTemplate.mjs --template ./templates/basic-editorial-v2 --create-if-missing"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.15",
-		"@m-p-toolkit/biome-config": "0.1.0",
-		"@sonar/scan": "4.3.5",
-		"@types/node": "24.0.0",
-		"@vitest/coverage-v8": "3.2.4",
-		"knip": "5.63.1",
-		"lefthook": "1.12.3",
-		"typescript": "5.9.3",
-		"vitest": "3.2.4"
+		"@biomejs/biome": "2.4.15"
 	}
 }
