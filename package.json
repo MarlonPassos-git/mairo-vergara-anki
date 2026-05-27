@@ -12,9 +12,11 @@
 		"lint": "pnpm exec biome check --files-ignore-unknown=true .",
 		"lint:fix": "pnpm exec biome check --write --files-ignore-unknown=true .",
 		"sync": "node ./scripts/Sync-AnkiTemplate.mjs --template ./templates/basic-editorial-v2 --create-if-missing",
-		"test": "node --test \"__tests__/**/*.spec.mjs\""
+		"test": "node --test \"__tests__/**/*.spec.mjs\"",
+		"test:ui": "playwright test"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.4.15"
+		"@biomejs/biome": "2.4.15",
+		"@playwright/test": "^1.60.0"
 	}
 }

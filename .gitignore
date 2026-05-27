@@ -20,6 +20,7 @@ node_modules/
 !.env.example
 # Generated docs
 docs/index.html
+test-results/
 # Temporary files
 tmp/
 temp/
