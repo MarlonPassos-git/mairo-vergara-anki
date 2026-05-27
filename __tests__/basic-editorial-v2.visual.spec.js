@@ -42,6 +42,7 @@ test("back keeps answer anchor and toggles full translation", async ({
 	await expect(page.locator(".mp-target-run")).toHaveText("figure out");
 	await expect(page.locator(".mp-n1-answer")).toContainText("descobrir");
 	await expect(page.locator("#mp-full-translation")).toBeHidden();
+	await expectMobileConnectorToReachAnswer(page, testInfo.project.name);
 
 	await page.getByRole("button", { name: "Ver traducao completa" }).click();
 
@@ -70,4 +71,44 @@ function readReplayButtonHtml() {
 			<path d="M16 8c1.5 1.8 1.5 6.2 0 8"></path>
 		</svg>
 	</a>`;
+}
+
+async function expectMobileConnectorToReachAnswer(page, projectName) {
+	if (!projectName.includes("mobile")) return;
+
+	await page.waitForFunction(() =>
+		document
+			.querySelector(".mp-connector-path")
+			?.getAttribute("d")
+			?.includes(" C "),
+	);
+	const geometry = await page.evaluate(readConnectorGeometry);
+	expect(geometry.answerGap).toBeLessThanOrEqual(12);
+	expect(geometry.arrowLineLength).toBeGreaterThanOrEqual(8);
+	expect(geometry.arrowPointsRight).toBe(true);
+	expect(geometry.curveCount).toBeGreaterThanOrEqual(2);
+	expect(geometry.mobileCurveSwing).toBeGreaterThanOrEqual(0.25);
+}
+
+function readConnectorGeometry() {
+	const path = document.querySelector(".mp-connector-path");
+	const answer = document.querySelector(".mp-n1-answer");
+	const card = document.querySelector(".mp-card-back");
+	const pathData = path.getAttribute("d");
+	const points = pathData.match(/-?\d+(?:\.\d+)?/g).map(Number);
+	const endX = points.at(-2);
+	const leadX = points.at(-4);
+	const answerLeft = answer.getBoundingClientRect().left;
+	const cardLeft = card.getBoundingClientRect().left;
+	const cardWidth = card.getBoundingClientRect().width;
+	const startX = points[0];
+	const xs = points.filter((_, index) => index % 2 === 0);
+	const minX = Math.min(...xs);
+	return {
+		answerGap: Math.abs(answerLeft - cardLeft - endX),
+		arrowLineLength: Math.abs(endX - leadX),
+		arrowPointsRight: endX > leadX,
+		curveCount: pathData.match(/ C /g).length,
+		mobileCurveSwing: (startX - minX) / cardWidth,
+	};
 }

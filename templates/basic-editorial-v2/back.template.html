@@ -250,10 +250,25 @@
     const cardBox = card.getBoundingClientRect();
     const from = readBottomCenterOfGroup(targets, cardBox);
     const to = readLeftCenter(answer, cardBox);
-    const lead = { x: limitInsideCard(to.x - 24, cardBox), y: to.y };
+    path.setAttribute("d", readConnectorPath(from, to, cardBox));
+  }
+
+  function readConnectorPath(from, to, cardBox) {
+    if (cardBox.width < 430) return readMobileConnectorPath(from, to, cardBox);
+
+    const lead = readConnectorLead(to, cardBox);
     const firstControl = { x: limitInsideCard(from.x - 34, cardBox), y: from.y + 42 };
-    const secondControl = { x: limitInsideCard(lead.x - 92, cardBox), y: lead.y - 6 };
-    path.setAttribute("d", `M ${from.x} ${from.y} C ${firstControl.x} ${firstControl.y}, ${secondControl.x} ${secondControl.y}, ${lead.x} ${lead.y} L ${to.x} ${to.y}`);
+    const secondControl = readSecondControlPoint(lead, cardBox);
+    return `M ${from.x} ${from.y} C ${firstControl.x} ${firstControl.y}, ${secondControl.x} ${secondControl.y}, ${lead.x} ${lead.y} L ${to.x} ${to.y}`;
+  }
+
+  function readMobileConnectorPath(from, to, cardBox) {
+    const lead = readConnectorLead(to, cardBox);
+    const firstControl = readMobileFirstControlPoint(from, cardBox);
+    const secondControl = readMobileSecondControlPoint(from, cardBox);
+    const thirdControl = readMobileThirdControlPoint(lead, cardBox);
+    const fourthControl = { x: lead.x - cardBox.width * 0.06, y: lead.y };
+    return `M ${from.x} ${from.y} C ${firstControl.x} ${firstControl.y}, ${secondControl.x} ${secondControl.y}, ${secondControl.x} ${secondControl.y} C ${thirdControl.x} ${thirdControl.y}, ${fourthControl.x} ${fourthControl.y}, ${lead.x} ${lead.y} L ${to.x} ${to.y}`;
   }
 
   function readBottomCenterOfGroup(elements, cardBox) {
@@ -279,7 +294,37 @@
 
   function readLeftCenter(element, cardBox) {
     const box = element.getBoundingClientRect();
-    return { x: box.left - cardBox.left - 18, y: box.top + box.height / 2 - cardBox.top };
+    const offset = cardBox.width < 430 ? 10 : 18;
+    return { x: box.left - cardBox.left - offset, y: box.top + box.height / 2 - cardBox.top };
+  }
+
+  function readConnectorLead(to, cardBox) {
+    const gap = cardBox.width < 430 ? cardBox.width * 0.026 : 24;
+    return { x: limitInsideCard(to.x - gap, cardBox), y: to.y };
+  }
+
+  function readSecondControlPoint(lead, cardBox) {
+    const reach = cardBox.width < 430 ? 32 : 92;
+    const lift = cardBox.width < 430 ? 72 : 6;
+    return { x: limitInsideCard(lead.x - reach, cardBox), y: lead.y - lift };
+  }
+
+  function readMobileFirstControlPoint(from, cardBox) {
+    return { x: from.x, y: from.y + cardBox.height * 0.14 };
+  }
+
+  function readMobileSecondControlPoint(from, cardBox) {
+    return {
+      x: limitInsideCard(from.x - cardBox.width * 0.3, cardBox),
+      y: from.y + cardBox.height * 0.22,
+    };
+  }
+
+  function readMobileThirdControlPoint(lead, cardBox) {
+    return {
+      x: limitInsideCard(lead.x - cardBox.width * 0.18, cardBox),
+      y: lead.y - cardBox.height * 0.13,
+    };
   }
 
   function limitInsideCard(value, cardBox) {
