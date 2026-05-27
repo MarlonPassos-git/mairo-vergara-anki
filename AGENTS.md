@@ -39,6 +39,8 @@ Esta pasta centraliza todos os artefatos de template do Anki para o curso do Mai
 ## Regras de implementação
 
 - preservar `id="answer"` no verso quando houver divisão entre frente e resposta
+- simular renderizacao do Anki nos testes com `tools/anki-renderer.mjs`
+- manter os testes Playwright cobrindo desktop e mobile para ajustes visuais
 - imagens devem ser responsivas
 - tipografia e espaçamento devem continuar legíveis em tela pequena
 - CSS deve ficar isolado no arquivo `styling.css`
@@ -61,7 +63,8 @@ Esta pasta centraliza todos os artefatos de template do Anki para o curso do Mai
 3. ajustar front, back e CSS
 4. documentar diferenças em `docs/templates.md`
 5. adicionar um exemplo de uso se o template exigir HTML estruturado dentro de um campo
-6. sincronizar com Anki usando `scripts/Sync-AnkiTemplate.mjs`
+6. atualizar ou criar teste visual em `__tests__/*.visual.spec.js`
+7. sincronizar com Anki usando `scripts/Sync-AnkiTemplate.mjs`
 
 <!-- setup-standard:start -->
 # AGENTS.md - mairo-vergara-anki
@@ -74,6 +77,7 @@ Catalogo de templates Anki para o Curso de Ingles Mairo Vergara.
 
 - pnpm `10.33.0`
 - Biome para lint/format dos arquivos suportados
+- Playwright para testes visuais desktop/mobile de templates Anki
 - Node para scripts de sincronizacao e geracao de docs
 
 ## Commands
@@ -81,12 +85,17 @@ Catalogo de templates Anki para o Curso de Ingles Mairo Vergara.
 ```powershell
 pnpm install
 pnpm lint
+pnpm test
+pnpm test:ui
 pnpm sync
 ```
 
 ## Testing Rules
 
-- No automated test suite is currently configured.
+- `pnpm test` roda checagens Node em `__tests__/**/*.spec.mjs`.
+- `pnpm test:ui` roda Playwright em `__tests__/*.visual.spec.js`.
+- Testes visuais devem simular classes/plataformas do Anki via `tools/anki-renderer.mjs`.
+- Para mudanças visuais intencionais, atualizar snapshots com `pnpm test:ui -- --update-snapshots`.
 
 ## Coding Rules
 
