@@ -16,6 +16,11 @@
 
 - A collection of Anki templates for the course. See the [template table](docs/templates.md) for front, back, and accepted fields.
 
+## Tests
+
+- `pnpm test`: runs Node template checks.
+- `pnpm test:ui`: runs Playwright visual checks in simulated Anki desktop and mobile webviews.
+
 ## Change Log
 
 See [CHANGELOG.md](CHANGELOG.md) for details about the changes in each version.
