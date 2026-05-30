@@ -6,7 +6,7 @@
 	"license": "MIT",
 	"author": "Marlon Passos",
 	"type": "module",
-	"packageManager": "pnpm@10.33.0",
+	"packageManager": "pnpm@11.5.0",
 	"scripts": {
 		"docs:templates": "node ./scripts/Generate-TemplateCatalog.mjs",
 		"lint": "pnpm exec biome check --files-ignore-unknown=true .",
